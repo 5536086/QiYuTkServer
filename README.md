@@ -20,8 +20,16 @@
 
 [奇遇淘客系统已开源](https://blog.qiyutech.tech/202102/05_tbk_server/)
 
-## 技术堆栈
+## 技术栈
 
 * Python
 * Django
-* FastAPI
+
+## 更新日志
+
+* [服务器端更新日志](https://tbk.qiyutech.tech/server/release.html)
+
+## 部署
+
+* [代码](https://github.com/QiYuTechOrg/QiYuTkDeploy)
+* [教程](https://tbk.qiyutech.tech/server/deploy.html)

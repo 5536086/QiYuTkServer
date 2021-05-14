@@ -1,9 +1,9 @@
 from typing import Optional, List
 
-from fastapi import Depends, Body
+from django.http import HttpRequest
 from pydantic import BaseModel, Field
-from structlog.stdlib import BoundLogger
-from ztk_api import ZTK, TMallShangPinArgs, TmallShangPinModel
+from qiyu_api.tbk_api import TbkItemInfo
+from qiyu_api.ztk_api import TMallShangPinArgs
 
 from core.logger import get_logger
 from core.resp.base import ResponseModel, ApiResp
@@ -14,7 +14,7 @@ from ...api_utils import api_inner_wrapper
 
 
 class TMallShangPinResponseModel(ResponseModel):
-    data: Optional[List[TmallShangPinModel]] = Field(None, title="详细数据")
+    data: Optional[List[TbkItemInfo]] = Field(None, title="详细数据")
 
 
 class TMallShangPinForm(BaseModel):
@@ -37,17 +37,17 @@ class TMallShangPinForm(BaseModel):
     tags=["折淘客"],
     summary="天猫商品",
     description="",
-    response_model=TMallShangPinResponseModel,
 )
 async def tmall_shang_pin(
-    g: TMallShangPinForm = Body(..., title="请求参数"),
-    logger: BoundLogger = Depends(get_logger),
-    ztk: ZTK = Depends(get_ztk_api_v2),
-):
+    request: HttpRequest, g: TMallShangPinForm
+) -> TMallShangPinResponseModel:
+    logger = get_logger()
+    ztk = get_ztk_api_v2(logger)
+
     @api_inner_wrapper(logger)
     async def inner():
         data = g.to_data()
         j = await ztk.tmall_shang_pin(data)
-        return ApiResp.from_data(j.content).to_dict()
+        return ApiResp.from_data(j).to_dict()
 
     return await inner

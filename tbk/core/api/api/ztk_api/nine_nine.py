@@ -1,9 +1,9 @@
 from typing import Optional, List
 
-from fastapi import Depends, Body
+from django.http import HttpRequest
 from pydantic import BaseModel, Field
-from structlog.stdlib import BoundLogger
-from ztk_api import ZTK, NineNineArgs, NineNineModel
+from qiyu_api.tbk_api import TbkItemInfo
+from qiyu_api.ztk_api import NineNineArgs
 
 from core.logger import get_logger
 from core.resp.base import ResponseModel, ApiResp
@@ -14,7 +14,7 @@ from ...api_utils import api_inner_wrapper
 
 
 class NineNineResponseModel(ResponseModel):
-    data: Optional[List[NineNineModel]] = Field(None, title="具体数据")
+    data: Optional[List[TbkItemInfo]] = Field(None, title="具体数据")
 
 
 class NineNineForm(BaseModel):
@@ -37,17 +37,15 @@ class NineNineForm(BaseModel):
     tags=["折淘客"],
     summary="9.9 包邮购",
     description="",
-    response_model=NineNineResponseModel,
 )
-async def nine_nine(
-    g: NineNineForm = Body(..., title="请求参数"),
-    logger: BoundLogger = Depends(get_logger),
-    ztk: ZTK = Depends(get_ztk_api_v2),
-):
+async def nine_nine(request: HttpRequest, g: NineNineForm) -> NineNineResponseModel:
+    logger = get_logger()
+    ztk = get_ztk_api_v2(logger)
+
     @api_inner_wrapper(logger)
     async def inner():
         data = g.to_data()
         j = await ztk.nine_nine(data)
-        return ApiResp.from_data(j.content).to_dict()
+        return ApiResp.from_data(j).to_dict()
 
     return await inner

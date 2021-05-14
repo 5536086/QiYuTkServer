@@ -2,10 +2,11 @@ from typing import Optional, Awaitable
 
 from asgiref.sync import sync_to_async, async_to_sync
 from django.core.exceptions import ObjectDoesNotExist
-from fastapi import Depends, Body
+from django.http import HttpRequest
 from pydantic import BaseModel, Field
+from qiyu_api.tbk_api import TbkItemInfo
+from qiyu_api.ztk_api import GaoYongArgs
 from structlog.stdlib import BoundLogger
-from ztk_api import GaoYongArgs, GaoYongModel
 
 from core.logger import get_logger
 from core.logic import ZTKLogic, UserV2Logic
@@ -19,7 +20,7 @@ from ...api_utils import api_inner_wrapper
 
 
 class GaoYongResponseModel(ResponseModel):
-    data: Optional[GaoYongModel] = Field(None, title="详细数据")
+    data: Optional[TbkItemInfo] = Field(None, title="详细数据")
 
 
 class GaoYongForm(BaseModel):
@@ -65,11 +66,10 @@ class GaoYongForm(BaseModel):
     tags=["折淘客"],
     summary="高佣转链",
     description="",
-    response_model=GaoYongResponseModel,
 )
-async def ztk_gao_yong(
-    g: GaoYongForm = Body(..., title="请求参数"), logger: BoundLogger = Depends(get_logger)
-):
+async def ztk_gao_yong(request: HttpRequest, g: GaoYongForm) -> GaoYongResponseModel:
+    logger = get_logger()
+
     @api_inner_wrapper(logger)
     async def init():
         args = await g.to_data(g, logger)

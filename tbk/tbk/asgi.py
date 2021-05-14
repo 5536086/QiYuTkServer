@@ -12,6 +12,8 @@ import os
 import dotenv
 from django.core.asgi import get_asgi_application
 
+__all__ = ["app"]
+
 dot_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "../.env")
 if os.path.exists(dot_file):
     dotenv.read_dotenv(dot_file)
@@ -21,7 +23,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tbk.settings")
 
 application = get_asgi_application()
 
-# noinspection PyPep8
-from core.api import app
+from core.api import app  # noqa
 
 api_app = app

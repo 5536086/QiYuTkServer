@@ -1,9 +1,9 @@
 from typing import Optional, List
 
-from fastapi import Depends, Body
+from django.http import HttpRequest
 from pydantic import BaseModel, Field
-from structlog.stdlib import BoundLogger
-from ztk_api import ZTK, TMallChaoShiArgs, TmallChaoShiModel
+from qiyu_api.tbk_api import TbkItemInfo
+from qiyu_api.ztk_api import TMallChaoShiArgs
 
 from core.logger import get_logger
 from core.resp.base import ResponseModel, ApiResp
@@ -14,7 +14,7 @@ from ...api_utils import api_inner_wrapper
 
 
 class TMallChaoShiResponseModel(ResponseModel):
-    data: Optional[List[TmallChaoShiModel]] = Field(None, title="返回数据")
+    data: Optional[List[TbkItemInfo]] = Field(None, title="返回数据")
 
 
 class TMallChaoShiForm(BaseModel):
@@ -37,17 +37,17 @@ class TMallChaoShiForm(BaseModel):
     tags=["折淘客"],
     summary="天猫超市",
     description="",
-    response_model=TMallChaoShiResponseModel,
 )
 async def tmall_chao_shi(
-    g: TMallChaoShiForm = Body(..., title="请求参数"),
-    logger: BoundLogger = Depends(get_logger),
-    ztk: ZTK = Depends(get_ztk_api_v2),
-):
+    request: HttpRequest, g: TMallChaoShiForm
+) -> TMallChaoShiResponseModel:
+    logger = get_logger()
+    ztk = get_ztk_api_v2(logger)
+
     @api_inner_wrapper(logger)
     async def inner():
         data = g.to_data()
         j = await ztk.tmall_chao_shi(data)
-        return ApiResp.from_data(j.to_dict()["content"]).to_dict()
+        return ApiResp.from_data(j).to_dict()
 
     return await inner

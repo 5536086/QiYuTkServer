@@ -1,7 +1,5 @@
-from dtk_api import DtkStdApi
-from dtk_api.gen import GoodsExplosiveGoodsListArgs
-from fastapi import Depends, Body
-from structlog.stdlib import BoundLogger
+from django.http import HttpRequest
+from qiyu_api.dtk_api.gen import GoodsExplosiveGoodsListArgs
 
 from core.logger import get_logger
 from core.resp.base import ApiResp
@@ -17,13 +15,13 @@ from ...api_utils import api_inner_wrapper
     tags=["大淘客"],
     summary="猜你喜欢",
     description="[每日爆品推荐](https://www.dataoke.com/pmc/api-d.html?id=34)",
-    response_model=GenericItemListResponseModel,
 )
 async def dtk_guess_you_like(
-    g: GoodsExplosiveGoodsListArgs = Body(..., title="请求参数"),
-    logger: BoundLogger = Depends(get_logger),
-    dtk: DtkStdApi = Depends(get_dtk_std),
-):
+    request: HttpRequest, g: GoodsExplosiveGoodsListArgs
+) -> GenericItemListResponseModel:
+    logger = get_logger()
+    dtk = await get_dtk_std()
+
     @api_inner_wrapper(logger)
     async def inner():
         j = await dtk.goods_explosive_goods_list(g)

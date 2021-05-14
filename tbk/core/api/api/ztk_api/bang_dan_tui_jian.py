@@ -1,9 +1,9 @@
 from typing import Optional, List
 
-from fastapi import Depends, Body
+from django.http import HttpRequest
 from pydantic import BaseModel, Field
-from structlog.stdlib import BoundLogger
-from ztk_api import ZTK, BangDanTuiJianArgs, BangDanTuiJianModel
+from qiyu_api.tbk_api import TbkItemInfo
+from qiyu_api.ztk_api import BangDanTuiJianArgs
 
 from core.logger import get_logger
 from core.resp.base import ResponseModel, ApiResp
@@ -14,7 +14,7 @@ from ...api_utils import api_inner_wrapper
 
 
 class BangDanTuiJianResponseModel(ResponseModel):
-    data: Optional[List[BangDanTuiJianModel]] = Field(None, title="详细数据")
+    data: Optional[List[TbkItemInfo]] = Field(None, title="详细数据")
 
 
 class BangDanTuiJianForm(BaseModel):
@@ -36,17 +36,17 @@ class BangDanTuiJianForm(BaseModel):
     tags=["折淘客"],
     summary="榜单推荐",
     description="",
-    response_model=BangDanTuiJianResponseModel,
 )
 async def bang_dan_tui_jian(
-    g: BangDanTuiJianForm = Body(..., title="请求参数"),
-    logger: BoundLogger = Depends(get_logger),
-    ztk: ZTK = Depends(get_ztk_api_v2),
-):
+    request: HttpRequest, g: BangDanTuiJianForm
+) -> BangDanTuiJianResponseModel:
+    logger = get_logger()
+    ztk = get_ztk_api_v2(logger)
+
     @api_inner_wrapper(logger)
     async def inner():
         data = g.to_data()
         j = await ztk.bang_dan_tui_jian(data)
-        return ApiResp.from_data(j.content).to_dict()
+        return ApiResp.from_data(j).to_dict()
 
     return await inner
